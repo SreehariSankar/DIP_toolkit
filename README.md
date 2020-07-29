@@ -1,6 +1,7 @@
 # DIP_toolkit
 Basic image processing toolkit meant as a skeleton for CV.
 Contains functions for:
+
 	LAWS: Texture segmentation (clustering), Simple LAWS
 	
 	OCR: Basic OCR pattern matching using OpenCV.
