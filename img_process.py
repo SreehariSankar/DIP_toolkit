@@ -603,3 +603,50 @@ def denoise(img):
     M3 = np.asarray([[1, 2, 1], [2, 4, 2], [1, 2, 1]]) * (1 / 16)
     img=filter_grey(img,M3)
     return img
+
+import cv2
+
+def OCR_Basic(image,verbose=False,iscolor=True,area=100,ln=40,height=5):
+    if iscolor:
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    else:
+        gray=image.astype(np.uint8)
+
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    thresh = cv2.adaptiveThreshold(blur, 255, 1, 1, 11, 2)
+    kernel = np.ones((3, 3), np.uint8)
+    erosion = cv2.erode(thresh, kernel, iterations=1)
+    thresh = cv2.dilate(erosion, kernel, iterations=1)
+    # cv2.imshow('thresh', thresh)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    st=[]
+    print("Number of contours detected:",len(contours))
+    for cnt in contours:
+        # m=cv2.moments(cnt)
+        length=cv2.arcLength(cnt,False)
+        [x, y, w, h] = cv2.boundingRect(cnt)
+        aspect_ratio=w/h
+        # print('Moment:',m)
+        if verbose:
+            print('Length:',length)
+            print("Aspect Ratio:",aspect_ratio)
+
+        """
+        HERE ARE THE CONSTRAINTS IN DETECTING CONTOURS. 
+        AS YOU CAN SEE, A VERY GOOD SET OF FEATURES WILL GIVE A VERY GOOD DETECTION SETUP.
+        UNFORTUNATELY MY ATTEMPTS AT DETECTING THE STAR SYMBOL RESULTED IN FAILURE.
+        Really, I'm only using area and height. Others dont really seem to help.        
+        """
+        if cv2.contourArea(cnt) > area and length>ln:
+            if h > height:
+                cv2.rectangle(image, (x, y), (x + w + 1, y + h + 1), (0, 0, 255), 2)
+                roi = thresh[y:y + h + 1, x:x + w + 2]
+                st.append(roi)
+                cv2.imshow('image', image)
+                cv2.waitKey(0)
+    if verbose:
+        for i in st:
+            plt.matshow(i)
+            plt.show()
+    return st
+
